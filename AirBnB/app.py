@@ -71,7 +71,7 @@ def create_figure(df, city):
 
 
 def create_app():
-    load_data()
+    # load_data()
     path = os.getcwd()
     pickle_path = os.path.abspath(os.path.join(path, './AirBnB.pkl'))
     external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
@@ -184,29 +184,37 @@ def create_app():
     )
     def update_city_data(city_dd, n_clicks, num_bedrooms_dd, num_bathrooms_dd,
                          listing_dd,  current_city):
-        print(n_clicks)
-        print(num_bathrooms_dd)
-        clicks = n_clicks
-        df = pd.read_pickle(pickle_path)
+
+        df = pd.read_pickle(pickle_path) # This will be replaced with pull dataframe from SQL
         city_df = df.loc[df['City'] == city_dd]
-        figure = create_figure(city_df, city_dd)
-        print(city_dd)
-        if n_clicks > clicks:
+
+        filter_df = city_df.loc[city_df['bedrooms'] != 'Missing'].copy()
+        filter_df['bedrooms'] = filter_df['bedrooms'].astype('float')
+        filter_df = filter_df.loc[filter_df['bathrooms_text'] == num_bathrooms_dd]
+        filter_df = filter_df.loc[filter_df['bedrooms'] >= float(num_bedrooms_dd)]
+        filter_df = filter_df.loc[filter_df['room_type'] == listing_dd]
+        figure = create_figure(filter_df, city_dd)
+        if len(filter_df) == 0:
+            city_df = df.loc[df['City'] == city_dd]
+            figure = create_figure(city_df, city_dd)
+        else:
+            figure = create_figure(filter_df, city_dd)
+
+        if current_city != city_dd:
+            city_df = df.loc[df['City'] == city_dd]
             filter_df = df.loc[df['City'] == city_dd].copy()
             filter_df = filter_df.loc[filter_df['bedrooms'] != 'Missing'].copy()
             filter_df['bedrooms'] = filter_df['bedrooms'].astype('float')
             filter_df = filter_df.loc[filter_df['bathrooms_text'] == num_bathrooms_dd]
             filter_df = filter_df.loc[filter_df['bedrooms'] >= float(num_bedrooms_dd)]
             filter_df = filter_df.loc[filter_df['room_type'] == listing_dd]
+            figure = create_figure(city_df, city_dd)
 
             if len(filter_df) == 0:
                 city_df = df.loc[df['City'] == city_dd]
                 figure = create_figure(city_df, city_dd)
             else:
                 figure = create_figure(filter_df, city_dd)
-        elif current_city != city_dd:
-            city_df = df.loc[df['City'] == city_dd]
-            figure = create_figure(city_df, city_dd)
 
         return figure
 
@@ -225,9 +233,10 @@ def create_app():
         data = data or {'clicks': 0}
 
         data['clicks'] = data['clicks'] + 1
+        print(data['clicks'])
         return data
 
 
 if __name__ == "__main__":
     app = create_app()
-    app.run_server(debug=True)
+    app.run_server(debug=True, port=8040)
