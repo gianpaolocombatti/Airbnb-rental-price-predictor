@@ -2,6 +2,7 @@ from dash.exceptions import PreventUpdate
 from neighbors_model import howdy_neighbor
 from read_listings import load_data
 import pandas as pd
+import numpy as np
 import json
 import os
 import flask
@@ -238,8 +239,10 @@ def create_app():
         df_predict = pd.DataFrame(
             columns = ['City','bedrooms','bathrooms_text','room_type'],
             data = [[city_dd, num_bedrooms_dd, num_bathrooms_dd, listing_dd]])
-        neigh = howdy_neighbor(city_df, columns_to_keep = ['City', 'bedrooms', 'bathrooms_text', 'room_type'], columns_to_encode=['room_type'])
-        y_pred, neighbors = neigh.predict_w_neigh(city_df)
+        array = np.array(df_predict)
+        ref_df = pd.concat([city_df, df_predict], ignore_index=True)
+        neigh = howdy_neighbor(ref_df, columns_to_keep = ['City', 'bedrooms', 'bathrooms_text', 'room_type'], columns_to_encode=['room_type'])
+        y_pred, neighbors = neigh.predict_w_neigh([array])
         return f'{y_pred} is the optimal rental price for the property'
         #return '100' # Delete once above is created
 
