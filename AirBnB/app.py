@@ -1,5 +1,5 @@
 from dash.exceptions import PreventUpdate
-
+from neighbors_model import howdy_neighbor
 from read_listings import load_data
 import pandas as pd
 import json
@@ -238,9 +238,10 @@ def create_app():
         df_predict = pd.DataFrame(
             columns = ['City','bedrooms','bathrooms_text','room_type'],
             data = [[city_dd, num_bedrooms_dd, num_bathrooms_dd, listing_dd]])
-        # y_pred = pipeline.predict(df)[0] - Include pipeline of model
-        # return f'{y_pred} is the optimal rental price for the property' - Remove comment once pipeline updated
-        return '100' # Delete once above is created
+        neigh = howdy_neighbor(city_df, columns_to_keep = ['City', 'bedrooms', 'bathrooms_text', 'room_type'], columns_to_encode=['room_type'])
+        y_pred, neighbors = neigh.predict_w_neigh(city_df)
+        return f'{y_pred} is the optimal rental price for the property'
+        #return '100' # Delete once above is created
 
     return app
 
