@@ -1,5 +1,5 @@
 from dash.exceptions import PreventUpdate
-from neighbors_model import howdy_neighbor
+from neighbors_model import bathroom_text_encoder, pipeline_model
 from read_listings import load_data
 import pandas as pd
 import numpy as np
@@ -239,10 +239,18 @@ def create_app():
         df_predict = pd.DataFrame(
             columns = ['City','bedrooms','bathrooms_text','room_type'],
             data = [[city_dd, num_bedrooms_dd, num_bathrooms_dd, listing_dd]])
-        array = np.array(df_predict)
-        ref_df = pd.concat([city_df, df_predict], ignore_index=True)
-        neigh = howdy_neighbor(ref_df, columns_to_keep = ['City', 'bedrooms', 'bathrooms_text', 'room_type'], columns_to_encode=['room_type'])
-        y_pred, neighbors = neigh.predict_w_neigh([array])
+        shared, private = bathroom_text_encoder(df_predict)
+        df_predict['shared_bathrooms'] = shared
+        df_predict['private_bathrooms'] = private
+        df_predict.drop(columns='bathrooms_text', inplace=True)
+        pipe, oh, stand, simp, kneigh = pipeline_model(df, cols_to_keep=['bathrooms_text', 'bedrooms', 'room_type',
+                                                                         'price'])
+        one = oh.transform(df_predict)
+        two = stand.transform(one)
+        three = simp.transform(two)
+        four = kneigh.kneighbors(three, n_neighbors=20)
+        y_pred = pipe.predict([df_predict])
+        near_neighbors = four[1]
         return f'{y_pred} is the optimal rental price for the property'
         #return '100' # Delete once above is created
 
