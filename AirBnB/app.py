@@ -167,7 +167,13 @@ def create_app():
                  id='MapPlot', figure=create_figure(city_df, 'Austin, TX')
                         )
                 ]
-            )
+            ),
+            html.Div(
+                dcc.Textarea(id='prediction-output',
+                             value='Output',
+                             className="two columns",
+                             style={'height': 50, 'width': 150},
+                             disabled=True))
             ])
         ]
     )
@@ -182,7 +188,7 @@ def create_app():
                State('current_city', 'data'),
                ]
     )
-    def update_city_data(city_dd, n_clicks, num_bedrooms_dd, num_bathrooms_dd,
+    def update_city_data(city_dd, num_bedrooms_dd, num_bathrooms_dd,
                          listing_dd,  current_city):
 
         df = pd.read_pickle(pickle_path) # This will be replaced with pull dataframe from SQL
@@ -218,23 +224,25 @@ def create_app():
 
         return figure
 
+    @app.callback(
+        Output('prediction-output','value'),
+        Input('city_dd', 'value'),
+        state=[State('num_bedrooms_dd', 'value'),
+             State('num_bathrooms_dd', 'value'),
+             State('listing_dd', 'value'),
+             ]
+    )
+
+    def predict_price(city_dd, num_bedrooms_dd, num_bathrooms_dd,listing_dd):
+
+        df_predict = pd.DataFrame(
+            columns = ['City','bedrooms','bathrooms_text','room_type'],
+            data = [[city_dd, num_bedrooms_dd, num_bathrooms_dd, listing_dd]])
+        # y_pred = pipeline.predict(df)[0] - Include pipeline of model
+        # return f'{y_pred} is the optimal rental price for the property' - Remove comment once pipeline updated
+        return '100' # Delete once above is created
+
     return app
-
-    @app.callback(Output('session', 'data'),
-                      Input('filter_button'.format('session'), 'n_clicks'),
-                      State('session', 'data'))
-    def on_click(n_clicks, data):
-        if n_clicks is None:
-            # prevent the None callbacks is important with the store component.
-            # you don't want to update the store for nothing.
-            raise PreventUpdate
-
-        # Give a default data dict with 0 clicks if there's no data.
-        data = data or {'clicks': 0}
-
-        data['clicks'] = data['clicks'] + 1
-        print(data['clicks'])
-        return data
 
 
 if __name__ == "__main__":
