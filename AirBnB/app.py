@@ -77,10 +77,12 @@ def create_app():
     pickle_path = os.path.abspath(os.path.join(path, './AirBnB.pkl'))
     external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
     df = pd.read_pickle(pickle_path)
+    for column in df.columns:
+        df[column] = df[column].fillna("Missing")
     city = 'Austin, TX'
     city_df = df.loc[df['City'] == city]
-    lat = city_df['latitude']  # *100
-    long = city_df['longitude']  # *100
+    lat = city_df['latitude']
+    long = city_df['longitude']
     n = len(lat)
     center_lat = sum(lat) / n
     center_long = sum(long) / n
@@ -112,7 +114,7 @@ def create_app():
                                  dcc.Textarea(id='Static_listing_type_text',
                                               value='Select Listing Type:',
                                               className="six columns",
-                                              style={'height': 50, 'width': 100},
+                                              style={'height': 50, 'width': 200},
                                               disabled=True)
                         ),
                          html.Div(
@@ -120,14 +122,14 @@ def create_app():
                                           options=[{'label': i, 'value': i} for i in room_type],
                                           value=room_type[0], placeholder=room_type[0],
                                           className="six columns",
-                                          style={'height': 50, 'width': 150, 'color': 'black'},
+                                          style={'height': 50, 'width': 200, 'color': 'black'},
                                           )
                                 ),
                          html.Div(
                              dcc.Textarea(id='Static_num_bathrooms_text',
                                           value='Select # of bathrooms:',
                                           className="six columns",
-                                          style={'height': 50, 'width': 150},
+                                          style={'height': 50, 'width': 200},
                                           disabled=True)
                                  ),
                          html.Div(
@@ -135,14 +137,14 @@ def create_app():
                                           options=[{'label': i, 'value': i} for i in bath_options],
                                           value='1 bath', placeholder='1 bath',
                                           className="six columns",
-                                          style={'height': 50, 'width': 150, 'color': 'black'},
+                                          style={'height': 50, 'width': 200, 'color': 'black'},
                                           )
                          ),
                          html.Div(
                              dcc.Textarea(id='Static_num_bedrooms_text',
                                           value='Select # of Beds:',
                                           className="six columns",
-                                          style={'height': 50, 'width': 150},
+                                          style={'height': 50, 'width': 200},
                                           disabled=True)
                          ),
                          html.Div(
@@ -150,7 +152,7 @@ def create_app():
                                           options=[{'label': i, 'value': i} for i in bed_options],
                                           value='1', placeholder='1',
                                           className="six columns",
-                                          style={'height': 50, 'width': 150, 'color': 'black'},
+                                          style={'height': 50, 'width': 250, 'color': 'black'},
                                           )
                          ),
                              ]
@@ -173,7 +175,7 @@ def create_app():
                 dcc.Textarea(id='prediction-output',
                              value='Output',
                              className="two columns",
-                             style={'height': 50, 'width': 150},
+                             style={'height': 200, 'width': 300},
                              disabled=True))
             ])
         ]
@@ -191,8 +193,8 @@ def create_app():
     def update_city_data(city_dd, num_bedrooms_dd, num_bathrooms_dd,
                          listing_dd,  current_city):
 
-        df = pd.read_pickle(pickle_path) # This will be replaced with pull dataframe from SQL
-        city_df = df.loc[df['City'] == city_dd]
+        df = pd.read_pickle(pickle_path).copy() # This will be replaced with pull dataframe from SQL
+        city_df = df.loc[df['City'] == city_dd].copy()
         filter_df = city_df.loc[city_df['bedrooms'] != 'Missing'].copy()
         filter_df['bedrooms'] = filter_df['bedrooms'].astype('float')
         filter_df = filter_df.loc[filter_df['bathrooms_text'] == num_bathrooms_dd]
@@ -208,7 +210,6 @@ def create_app():
         if current_city != city_dd:
             city_df = df.loc[df['City'] == city_dd]
             filter_df = df.loc[df['City'] == city_dd].copy()
-            filter_df = filter_df.loc[filter_df['bedrooms'] != 'Missing'].copy()
             filter_df['bedrooms'] = filter_df['bedrooms'].astype('float')
             filter_df = filter_df.loc[filter_df['bathrooms_text'] == num_bathrooms_dd]
             filter_df = filter_df.loc[filter_df['bedrooms'] >= float(num_bedrooms_dd)]
@@ -220,7 +221,6 @@ def create_app():
                 figure = create_figure(city_df, city_dd)
             else:
                 figure = create_figure(filter_df, city_dd)
-
         return figure
 
     @app.callback(
@@ -231,17 +231,17 @@ def create_app():
         Input('listing_dd', 'value'),
              ]
     )
-
-    def predict_price(city_dd, num_bedrooms_dd, num_bathrooms_dd,listing_dd):
+    def predict_price(city_dd, num_bedrooms_dd, num_bathrooms_dd, listing_dd):
 
         df_predict = pd.DataFrame(
-            columns = ['City','bedrooms','bathrooms_text','room_type'],
+            columns = ['City', 'bedrooms', 'bathrooms_text', 'room_type'],
             data = [[city_dd, num_bedrooms_dd, num_bathrooms_dd, listing_dd]])
-        new = df.loc[df['City']==city_dd]
+        new = df.loc[df['City'] == city_dd].copy()
         shared, private = bathroom_text_encoder(df_predict)
         df_predict['shared_bathrooms'] = shared
         df_predict['private_bathrooms'] = private
         df_predict.drop(columns=['bathrooms_text', 'City'], inplace=True)
+        new = new.replace("Missing", None)
         pipe, oh, stand, simp, kneigh = pipeline_model(new, cols_to_keep=['bathrooms_text', 'bedrooms', 'room_type',
                                                                          'price'])
         one = oh.transform(df_predict)
@@ -250,11 +250,12 @@ def create_app():
         four = kneigh.kneighbors(three, n_neighbors=20)
         y_pred = pipe.predict(df_predict)[0]
         near_neighbors = four[1]
-        return f'{y_pred} is the optimal rental price for the property'
+        value = f'{y_pred} is the optimal rental price for the property'
+        return value
 
     return app
 
 
 if __name__ == "__main__":
     app = create_app()
-    app.run_server(debug=True, port=8040)
+    app.run_server(debug=True, port=8060)
