@@ -72,7 +72,7 @@ def create_figure(df, city):
 
 
 def create_app():
-    # load_data()
+    load_data()
     path = os.getcwd()
     pickle_path = os.path.abspath(os.path.join(path, './AirBnB.pkl'))
     external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
@@ -181,8 +181,7 @@ def create_app():
 
     @app.callback(
         Output('MapPlot', 'figure'),
-        #Input('city_dd', 'value'),
-        [Input('filter_button', 'n_clicks')],
+        [Input('city_dd', 'value')],
         state=[State('num_bedrooms_dd', 'value'),
                State('num_bathrooms_dd', 'value'),
                State('listing_dd', 'value'),
@@ -194,7 +193,6 @@ def create_app():
 
         df = pd.read_pickle(pickle_path) # This will be replaced with pull dataframe from SQL
         city_df = df.loc[df['City'] == city_dd]
-
         filter_df = city_df.loc[city_df['bedrooms'] != 'Missing'].copy()
         filter_df['bedrooms'] = filter_df['bedrooms'].astype('float')
         filter_df = filter_df.loc[filter_df['bathrooms_text'] == num_bathrooms_dd]
@@ -227,10 +225,10 @@ def create_app():
 
     @app.callback(
         Output('prediction-output','value'),
-        Input('city_dd', 'value'),
-        state=[State('num_bedrooms_dd', 'value'),
-             State('num_bathrooms_dd', 'value'),
-             State('listing_dd', 'value'),
+        [Input('city_dd', 'value'),
+        Input('num_bedrooms_dd', 'value'),
+        Input('num_bathrooms_dd', 'value'),
+        Input('listing_dd', 'value'),
              ]
     )
 
@@ -239,16 +237,11 @@ def create_app():
         df_predict = pd.DataFrame(
             columns = ['City','bedrooms','bathrooms_text','room_type'],
             data = [[city_dd, num_bedrooms_dd, num_bathrooms_dd, listing_dd]])
-<<<<<<< HEAD
-        # y_pred = pipeline.predict(df_predict)[0] - Include pipeline of model
-        # return f'{y_pred} is the optimal rental price for the property' - Remove comment once pipeline updated
-        return '100' # Delete once above is created
-=======
         new = df.loc[df['City']==city_dd]
         shared, private = bathroom_text_encoder(df_predict)
         df_predict['shared_bathrooms'] = shared
         df_predict['private_bathrooms'] = private
-        df_predict.drop(columns='bathrooms_text', inplace=True)
+        df_predict.drop(columns=['bathrooms_text', 'City'], inplace=True)
         pipe, oh, stand, simp, kneigh = pipeline_model(new, cols_to_keep=['bathrooms_text', 'bedrooms', 'room_type',
                                                                          'price'])
         one = oh.transform(df_predict)
@@ -258,8 +251,6 @@ def create_app():
         y_pred = pipe.predict(df_predict)[0]
         near_neighbors = four[1]
         return f'{y_pred} is the optimal rental price for the property'
-        #return '100' # Delete once above is created
->>>>>>> e66411a5c16f856f9c1990e71e550dba5ec6b793
 
     return app
 
