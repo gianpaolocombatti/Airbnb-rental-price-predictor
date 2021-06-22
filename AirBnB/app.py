@@ -238,7 +238,7 @@ def create_app():
         df_predict = pd.DataFrame(
             columns = ['City','bedrooms','bathrooms_text','room_type'],
             data = [[city_dd, num_bedrooms_dd, num_bathrooms_dd, listing_dd]])
-        # y_pred = pipeline.predict(df)[0] - Include pipeline of model
+        # y_pred = pipeline.predict(df_predict)[0] - Include pipeline of model
         # return f'{y_pred} is the optimal rental price for the property' - Remove comment once pipeline updated
         return '100' # Delete once above is created
 
