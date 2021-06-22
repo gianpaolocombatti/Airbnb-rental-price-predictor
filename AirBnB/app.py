@@ -1,7 +1,8 @@
 from dash.exceptions import PreventUpdate
-
+from neighbors_model import bathroom_text_encoder, pipeline_model
 from read_listings import load_data
 import pandas as pd
+import numpy as np
 import json
 import os
 import flask
@@ -180,7 +181,7 @@ def create_app():
 
     @app.callback(
         Output('MapPlot', 'figure'),
-        Input('city_dd', 'value'),
+        #Input('city_dd', 'value'),
         [Input('filter_button', 'n_clicks')],
         state=[State('num_bedrooms_dd', 'value'),
                State('num_bathrooms_dd', 'value'),
@@ -238,9 +239,27 @@ def create_app():
         df_predict = pd.DataFrame(
             columns = ['City','bedrooms','bathrooms_text','room_type'],
             data = [[city_dd, num_bedrooms_dd, num_bathrooms_dd, listing_dd]])
+<<<<<<< HEAD
         # y_pred = pipeline.predict(df_predict)[0] - Include pipeline of model
         # return f'{y_pred} is the optimal rental price for the property' - Remove comment once pipeline updated
         return '100' # Delete once above is created
+=======
+        new = df.loc[df['City']==city_dd]
+        shared, private = bathroom_text_encoder(df_predict)
+        df_predict['shared_bathrooms'] = shared
+        df_predict['private_bathrooms'] = private
+        df_predict.drop(columns='bathrooms_text', inplace=True)
+        pipe, oh, stand, simp, kneigh = pipeline_model(new, cols_to_keep=['bathrooms_text', 'bedrooms', 'room_type',
+                                                                         'price'])
+        one = oh.transform(df_predict)
+        two = stand.transform(one)
+        three = simp.transform(two)
+        four = kneigh.kneighbors(three, n_neighbors=20)
+        y_pred = pipe.predict(df_predict)[0]
+        near_neighbors = four[1]
+        return f'{y_pred} is the optimal rental price for the property'
+        #return '100' # Delete once above is created
+>>>>>>> e66411a5c16f856f9c1990e71e550dba5ec6b793
 
     return app
 
