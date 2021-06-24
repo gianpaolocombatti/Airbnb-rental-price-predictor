@@ -38,6 +38,16 @@ def pipeline_model(df, cols_to_keep):
 
   shared, private = bathroom_text_encoder(df_copy)
 
+  alpha = []
+
+  for x in df_copy['price']:
+    x = x.strip('$')
+    x = x.replace(',', '')
+    x = float(x)
+    alpha.append(x)
+
+  df_copy['price'] = alpha
+
   if shared:
     df_copy.drop(columns='bathrooms_text', inplace=True)
     df_copy['shared_bathrooms'] = shared

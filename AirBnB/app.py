@@ -1,6 +1,5 @@
 from dash.exceptions import PreventUpdate
 from neighbors_model import bathroom_text_encoder, pipeline_model
-from read_listings import load_data
 import pandas as pd
 import numpy as np
 import json
@@ -11,6 +10,7 @@ from dash.dependencies import Output, Input, State
 import dash_core_components as dcc
 import dash_html_components as html
 import plotly.express as px
+from data_loading import load_listing
 
 
 def get_layout(center_lat, center_long):
@@ -72,15 +72,12 @@ def create_figure(df, city):
 
 
 def create_app():
-    load_data()
-    path = os.getcwd()
-    pickle_path = os.path.abspath(os.path.join(path, './AirBnB.pkl'))
+
     external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-    df = pd.read_pickle(pickle_path)
-    for column in df.columns:
-        df[column] = df[column].fillna("Missing")
-    city = 'Austin, TX'
-    city_df = df.loc[df['City'] == city]
+    dir_value = 'united-states, tx, austin'
+    city_df, keys = load_listing(dir_value=dir_value, list_names=True)
+    for column in city_df.columns:
+        city_df[column] = city_df[column].fillna("Missing")
     lat = city_df['latitude']
     long = city_df['longitude']
     n = len(lat)
@@ -90,7 +87,7 @@ def create_app():
     count_btn_press = pd.DataFrame(data=clicks)
     count_btn_press.to_pickle('clicks.pkl')
 
-    cities = ['Asheville, NC', 'Austin, TX', 'Broward, FL', 'Cambridge, MA', 'Chicago, IL', 'Columbus, OH']
+    cities = [x for x in keys]
     server = flask.Flask(__name__)
     app = Dash(__name__, external_stylesheets=external_stylesheets, server=server)
     room_type = city_df['room_type'].unique()
@@ -104,7 +101,7 @@ def create_app():
             html.Div(children=[
                 dcc.Dropdown(id='city_dd',
                              options=[{'label': i, 'value': i} for i in cities],
-                             value='Austin, TX', placeholder='Austin, TX',
+                             value='united-states, tx, austin', placeholder='united-states, tx, austin',
                              style={'color': "black"}),
                 dcc.Store(id='current_city', storage_type='session', data='Austin, TX'),
             ]),
@@ -193,57 +190,55 @@ def create_app():
     def update_city_data(city_dd, num_bedrooms_dd, num_bathrooms_dd,
                          listing_dd,  current_city):
 
-        df = pd.read_pickle(pickle_path).copy() # This will be replaced with pull dataframe from SQL
-        city_df = df.loc[df['City'] == city_dd].copy()
+        city_df = load_listing(dir_value=city_dd)
         filter_df = city_df.loc[city_df['bedrooms'] != 'Missing'].copy()
         filter_df['bedrooms'] = filter_df['bedrooms'].astype('float')
         filter_df = filter_df.loc[filter_df['bathrooms_text'] == num_bathrooms_dd]
         filter_df = filter_df.loc[filter_df['bedrooms'] >= float(num_bedrooms_dd)]
         filter_df = filter_df.loc[filter_df['room_type'] == listing_dd]
         figure = create_figure(filter_df, city_dd)
-        if len(filter_df) == 0:
-            city_df = df.loc[df['City'] == city_dd]
-            figure = create_figure(city_df, city_dd)
-        else:
-            figure = create_figure(filter_df, city_dd)
+        #if len(filter_df) == 0:
+            #city_df = city_df.loc[city_df['City'] == city_dd]
+            #figure = create_figure(city_df, city_dd)
+        #else:
+            #figure = create_figure(filter_df, city_dd)
 
-        if current_city != city_dd:
-            city_df = df.loc[df['City'] == city_dd]
-            filter_df = df.loc[df['City'] == city_dd].copy()
-            filter_df['bedrooms'] = filter_df['bedrooms'].astype('float')
-            filter_df = filter_df.loc[filter_df['bathrooms_text'] == num_bathrooms_dd]
-            filter_df = filter_df.loc[filter_df['bedrooms'] >= float(num_bedrooms_dd)]
-            filter_df = filter_df.loc[filter_df['room_type'] == listing_dd]
-            figure = create_figure(city_df, city_dd)
+        #if current_city != city_dd:
+            #city_df = city_df.loc[df['City'] == city_dd]
+            #filter_df = df.loc[df['City'] == city_dd].copy()
+            #filter_df['bedrooms'] = filter_df['bedrooms'].astype('float')
+            #filter_df = filter_df.loc[filter_df['bathrooms_text'] == num_bathrooms_dd]
+            #filter_df = filter_df.loc[filter_df['bedrooms'] >= float(num_bedrooms_dd)]
+            #filter_df = filter_df.loc[filter_df['room_type'] == listing_dd]
+            #figure = create_figure(city_df, city_dd)
 
-            if len(filter_df) == 0:
-                city_df = df.loc[df['City'] == city_dd]
-                figure = create_figure(city_df, city_dd)
-            else:
-                figure = create_figure(filter_df, city_dd)
+            #if len(filter_df) == 0:
+                #city_df = df.loc[df['City'] == city_dd]
+                #figure = create_figure(city_df, city_dd)
+            #else:
+                #figure = create_figure(filter_df, city_dd)
         return figure
 
     @app.callback(
         Output('prediction-output','value'),
-        [Input('city_dd', 'value'),
-        Input('num_bedrooms_dd', 'value'),
+        [Input('num_bedrooms_dd', 'value'),
         Input('num_bathrooms_dd', 'value'),
         Input('listing_dd', 'value'),
              ]
     )
-    def predict_price(city_dd, num_bedrooms_dd, num_bathrooms_dd, listing_dd):
+    def predict_price(num_bedrooms_dd, num_bathrooms_dd, listing_dd):
 
         df_predict = pd.DataFrame(
-            columns = ['City', 'bedrooms', 'bathrooms_text', 'room_type'],
-            data = [[city_dd, num_bedrooms_dd, num_bathrooms_dd, listing_dd]])
-        new = df.loc[df['City'] == city_dd].copy()
+            columns = ['bedrooms', 'bathrooms_text', 'room_type'],
+            data = [[num_bedrooms_dd, num_bathrooms_dd, listing_dd]])
+        new = city_df.copy()
+        new = new[['bedrooms', 'bathrooms_text', 'room_type', 'price']]
         shared, private = bathroom_text_encoder(df_predict)
         df_predict['shared_bathrooms'] = shared
         df_predict['private_bathrooms'] = private
-        df_predict.drop(columns=['bathrooms_text', 'City'], inplace=True)
+        df_predict.drop(columns=['bathrooms_text'], inplace=True)
         new = new.replace("Missing", None)
-        pipe, oh, stand, simp, kneigh = pipeline_model(new, cols_to_keep=['bathrooms_text', 'bedrooms', 'room_type',
-                                                                         'price'])
+        pipe, oh, stand, simp, kneigh = pipeline_model(new, cols_to_keep=['bathrooms_text', 'bedrooms', 'room_type', 'price'])
         one = oh.transform(df_predict)
         two = stand.transform(one)
         three = simp.transform(two)
