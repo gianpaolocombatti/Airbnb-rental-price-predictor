@@ -233,6 +233,8 @@ def load_listing(dir_value, list_names=False):
   alpha = directory[dir_value]
 
   df = pd.read_csv(alpha)
+  col_new = dir_value.split()[-1]
+  df['City'] = col_new
 
   if list_names==True:
    return df, directory.keys()

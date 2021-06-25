@@ -1,7 +1,7 @@
 from dash.exceptions import PreventUpdate
-
-from read_listings import load_data
+from neighbors_model import bathroom_text_encoder, pipeline_model
 import pandas as pd
+import numpy as np
 import json
 import os
 import flask
@@ -10,6 +10,7 @@ from dash.dependencies import Output, Input, State
 import dash_core_components as dcc
 import dash_html_components as html
 import plotly.express as px
+from data_loading import load_listing
 
 
 def get_layout(center_lat, center_long):
@@ -71,15 +72,14 @@ def create_figure(df, city):
 
 
 def create_app():
-    # load_data()
-    path = os.getcwd()
-    pickle_path = os.path.abspath(os.path.join(path, './AirBnB.pkl'))
+
     external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-    df = pd.read_pickle(pickle_path)
-    city = 'Austin, TX'
-    city_df = df.loc[df['City'] == city]
-    lat = city_df['latitude']  # *100
-    long = city_df['longitude']  # *100
+    dir_value = 'united-states, tx, austin'
+    city_df, keys = load_listing(dir_value=dir_value, list_names=True)
+    for column in city_df.columns:
+        city_df[column] = city_df[column].fillna("Missing")
+    lat = city_df['latitude']
+    long = city_df['longitude']
     n = len(lat)
     center_lat = sum(lat) / n
     center_long = sum(long) / n
@@ -87,7 +87,7 @@ def create_app():
     count_btn_press = pd.DataFrame(data=clicks)
     count_btn_press.to_pickle('clicks.pkl')
 
-    cities = ['Asheville, NC', 'Austin, TX', 'Broward, FL', 'Cambridge, MA', 'Chicago, IL', 'Columbus, OH']
+    cities = [x for x in keys]
     server = flask.Flask(__name__)
     app = Dash(__name__, external_stylesheets=external_stylesheets, server=server)
     room_type = city_df['room_type'].unique()
@@ -101,7 +101,7 @@ def create_app():
             html.Div(children=[
                 dcc.Dropdown(id='city_dd',
                              options=[{'label': i, 'value': i} for i in cities],
-                             value='Austin, TX', placeholder='Austin, TX',
+                             value='united-states, tx, austin', placeholder='united-states, tx, austin',
                              style={'color': "black"}),
                 dcc.Store(id='current_city', storage_type='session', data='Austin, TX'),
             ]),
@@ -111,7 +111,7 @@ def create_app():
                                  dcc.Textarea(id='Static_listing_type_text',
                                               value='Select Listing Type:',
                                               className="six columns",
-                                              style={'height': 50, 'width': 100},
+                                              style={'height': 50, 'width': 200},
                                               disabled=True)
                         ),
                          html.Div(
@@ -119,14 +119,14 @@ def create_app():
                                           options=[{'label': i, 'value': i} for i in room_type],
                                           value=room_type[0], placeholder=room_type[0],
                                           className="six columns",
-                                          style={'height': 50, 'width': 150, 'color': 'black'},
+                                          style={'height': 50, 'width': 200, 'color': 'black'},
                                           )
                                 ),
                          html.Div(
                              dcc.Textarea(id='Static_num_bathrooms_text',
                                           value='Select # of bathrooms:',
                                           className="six columns",
-                                          style={'height': 50, 'width': 150},
+                                          style={'height': 50, 'width': 200},
                                           disabled=True)
                                  ),
                          html.Div(
@@ -134,14 +134,14 @@ def create_app():
                                           options=[{'label': i, 'value': i} for i in bath_options],
                                           value='1 bath', placeholder='1 bath',
                                           className="six columns",
-                                          style={'height': 50, 'width': 150, 'color': 'black'},
+                                          style={'height': 50, 'width': 200, 'color': 'black'},
                                           )
                          ),
                          html.Div(
                              dcc.Textarea(id='Static_num_bedrooms_text',
                                           value='Select # of Beds:',
                                           className="six columns",
-                                          style={'height': 50, 'width': 150},
+                                          style={'height': 50, 'width': 200},
                                           disabled=True)
                          ),
                          html.Div(
@@ -149,7 +149,7 @@ def create_app():
                                           options=[{'label': i, 'value': i} for i in bed_options],
                                           value='1', placeholder='1',
                                           className="six columns",
-                                          style={'height': 50, 'width': 150, 'color': 'black'},
+                                          style={'height': 50, 'width': 250, 'color': 'black'},
                                           )
                          ),
                              ]
@@ -167,76 +167,90 @@ def create_app():
                  id='MapPlot', figure=create_figure(city_df, 'Austin, TX')
                         )
                 ]
-            )
+            ),
+            html.Div(
+                dcc.Textarea(id='prediction-output',
+                             value='Output',
+                             className="two columns",
+                             style={'height': 200, 'width': 300},
+                             disabled=True))
             ])
         ]
     )
 
     @app.callback(
         Output('MapPlot', 'figure'),
-        Input('city_dd', 'value'),
-        [Input('filter_button', 'n_clicks')],
+        [Input('city_dd', 'value')],
         state=[State('num_bedrooms_dd', 'value'),
                State('num_bathrooms_dd', 'value'),
                State('listing_dd', 'value'),
                State('current_city', 'data'),
                ]
     )
-    def update_city_data(city_dd, n_clicks, num_bedrooms_dd, num_bathrooms_dd,
+    def update_city_data(city_dd, num_bedrooms_dd, num_bathrooms_dd,
                          listing_dd,  current_city):
 
-        df = pd.read_pickle(pickle_path) # This will be replaced with pull dataframe from SQL
-        city_df = df.loc[df['City'] == city_dd]
-
+        city_df = load_listing(dir_value=city_dd)
         filter_df = city_df.loc[city_df['bedrooms'] != 'Missing'].copy()
         filter_df['bedrooms'] = filter_df['bedrooms'].astype('float')
         filter_df = filter_df.loc[filter_df['bathrooms_text'] == num_bathrooms_dd]
         filter_df = filter_df.loc[filter_df['bedrooms'] >= float(num_bedrooms_dd)]
         filter_df = filter_df.loc[filter_df['room_type'] == listing_dd]
         figure = create_figure(filter_df, city_dd)
-        if len(filter_df) == 0:
-            city_df = df.loc[df['City'] == city_dd]
-            figure = create_figure(city_df, city_dd)
-        else:
-            figure = create_figure(filter_df, city_dd)
+        #if len(filter_df) == 0:
+            #city_df = city_df.loc[city_df['City'] == city_dd]
+            #figure = create_figure(city_df, city_dd)
+        #else:
+            #figure = create_figure(filter_df, city_dd)
 
-        if current_city != city_dd:
-            city_df = df.loc[df['City'] == city_dd]
-            filter_df = df.loc[df['City'] == city_dd].copy()
-            filter_df = filter_df.loc[filter_df['bedrooms'] != 'Missing'].copy()
-            filter_df['bedrooms'] = filter_df['bedrooms'].astype('float')
-            filter_df = filter_df.loc[filter_df['bathrooms_text'] == num_bathrooms_dd]
-            filter_df = filter_df.loc[filter_df['bedrooms'] >= float(num_bedrooms_dd)]
-            filter_df = filter_df.loc[filter_df['room_type'] == listing_dd]
-            figure = create_figure(city_df, city_dd)
+        #if current_city != city_dd:
+            #city_df = city_df.loc[df['City'] == city_dd]
+            #filter_df = df.loc[df['City'] == city_dd].copy()
+            #filter_df['bedrooms'] = filter_df['bedrooms'].astype('float')
+            #filter_df = filter_df.loc[filter_df['bathrooms_text'] == num_bathrooms_dd]
+            #filter_df = filter_df.loc[filter_df['bedrooms'] >= float(num_bedrooms_dd)]
+            #filter_df = filter_df.loc[filter_df['room_type'] == listing_dd]
+            #figure = create_figure(city_df, city_dd)
 
-            if len(filter_df) == 0:
-                city_df = df.loc[df['City'] == city_dd]
-                figure = create_figure(city_df, city_dd)
-            else:
-                figure = create_figure(filter_df, city_dd)
-
+            #if len(filter_df) == 0:
+                #city_df = df.loc[df['City'] == city_dd]
+                #figure = create_figure(city_df, city_dd)
+            #else:
+                #figure = create_figure(filter_df, city_dd)
         return figure
 
+    @app.callback(
+        Output('prediction-output','value'),
+        [Input('num_bedrooms_dd', 'value'),
+        Input('num_bathrooms_dd', 'value'),
+        Input('listing_dd', 'value'),
+             ]
+    )
+    def predict_price(num_bedrooms_dd, num_bathrooms_dd, listing_dd):
+
+        df_predict = pd.DataFrame(
+            columns = ['bedrooms', 'bathrooms_text', 'room_type'],
+            data = [[num_bedrooms_dd, num_bathrooms_dd, listing_dd]])
+        new = city_df.copy()
+        new = new[['bedrooms', 'bathrooms_text', 'room_type', 'price']]
+        shared, private = bathroom_text_encoder(df_predict)
+        df_predict['shared_bathrooms'] = shared
+        df_predict['private_bathrooms'] = private
+        df_predict.drop(columns=['bathrooms_text'], inplace=True)
+        new = new.replace("Missing", None)
+        pipe, oh, stand, simp, kneigh = pipeline_model(new, cols_to_keep=['bathrooms_text', 'bedrooms', 'room_type', 'price'])
+        one = oh.transform(df_predict)
+        two = stand.transform(one)
+        three = simp.transform(two)
+        four = kneigh.kneighbors(three, n_neighbors=20)
+        y_pred = pipe.predict(df_predict)[0]
+        near_neighbors = four[1]
+        value = f'{y_pred} is the optimal rental price for the property'
+        return value
+
     return app
-
-    @app.callback(Output('session', 'data'),
-                      Input('filter_button'.format('session'), 'n_clicks'),
-                      State('session', 'data'))
-    def on_click(n_clicks, data):
-        if n_clicks is None:
-            # prevent the None callbacks is important with the store component.
-            # you don't want to update the store for nothing.
-            raise PreventUpdate
-
-        # Give a default data dict with 0 clicks if there's no data.
-        data = data or {'clicks': 0}
-
-        data['clicks'] = data['clicks'] + 1
-        print(data['clicks'])
-        return data
 
 
 if __name__ == "__main__":
     app = create_app()
-    app.run_server(debug=True, port=8040)
+    app.run_server(debug=True, port=8060)
