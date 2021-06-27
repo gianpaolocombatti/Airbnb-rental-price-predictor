@@ -3,13 +3,13 @@ import numpy as np
 import re
 import os
 path = os.getcwd()
-pickle_path = os.path.abspath(os.path.join(path, './AirBnB.pkl'))
-nc_path = os.path.abspath(os.path.join(path, './asheville_nc_listings.csv'))
-austin_path = os.path.abspath(os.path.join(path, './austin_tx_listings.csv'))
-broward_path = os.path.abspath(os.path.join(path, './broward_fl_listings.csv'))
-cambridge_path = os.path.abspath(os.path.join(path, './cambridge_ma_listings.csv'))
-chicago_path = os.path.abspath(os.path.join(path, './chicago_il_listings.csv'))
-columbus_path = os.path.abspath(os.path.join(path, './columbus_oh_listings.csv'))
+pickle_path = os.path.abspath(os.path.join(path, 'AirBnB.pkl'))
+nc_path = os.path.abspath(os.path.join(path, 'asheville_nc_listings.csv'))
+austin_path = os.path.abspath(os.path.join(path, 'austin_tx_listings.csv'))
+broward_path = os.path.abspath(os.path.join(path, 'broward_fl_listings.csv'))
+cambridge_path = os.path.abspath(os.path.join(path, 'cambridge_ma_listings.csv'))
+chicago_path = os.path.abspath(os.path.join(path, 'chicago_il_listings.csv'))
+columbus_path = os.path.abspath(os.path.join(path, 'columbus_oh_listings.csv'))
 
 def hasNumbers(input):
     try:
