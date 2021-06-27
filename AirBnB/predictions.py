@@ -191,36 +191,35 @@ layout = html.Div(children=[
            ]
 )
 def update_city_data(city_dd, num_bedrooms_dd, num_bathrooms_dd,
-                     listing_dd,  current_city):
-
-    city_df = load_listing(dir_value=city_dd)
-    filter_df = city_df.loc[city_df['bedrooms'] != 'Missing'].copy()
+                     listing_dd, current_city):
+    df_alpha = load_listing(dir_value=city_dd)
+    filter_df = df_alpha.loc[df_alpha['bedrooms'] != 'Missing'].copy()
     filter_df['bedrooms'] = filter_df['bedrooms'].astype('float')
     filter_df = filter_df.loc[filter_df['bathrooms_text'] == num_bathrooms_dd]
     filter_df = filter_df.loc[filter_df['bedrooms'] >= float(num_bedrooms_dd)]
     filter_df = filter_df.loc[filter_df['room_type'] == listing_dd]
-    figure = create_figure(filter_df, city_dd)
-    #if len(filter_df) == 0:
-        #city_df = city_df.loc[city_df['City'] == city_dd]
-        #figure = create_figure(city_df, city_dd)
-    #else:
-        #figure = create_figure(filter_df, city_dd)
+    #figure = create_figure(filter_df, city_dd)
+    if len(filter_df) == 0:
+     figure = create_figure(df_alpha, city_dd)
+    else:
+     figure = create_figure(filter_df, city_dd)
 
     #if current_city != city_dd:
-        #city_df = city_df.loc[df['City'] == city_dd]
-        #filter_df = df.loc[df['City'] == city_dd].copy()
-        #filter_df['bedrooms'] = filter_df['bedrooms'].astype('float')
-        #filter_df = filter_df.loc[filter_df['bathrooms_text'] == num_bathrooms_dd]
-        #filter_df = filter_df.loc[filter_df['bedrooms'] >= float(num_bedrooms_dd)]
-        #filter_df = filter_df.loc[filter_df['room_type'] == listing_dd]
-        #figure = create_figure(city_df, city_dd)
+    # city_df = city_df.loc[df['City'] == city_dd]
+    # filter_df = df.loc[df['City'] == city_dd].copy()
+    # filter_df['bedrooms'] = filter_df['bedrooms'].astype('float')
+    # filter_df = filter_df.loc[filter_df['bathrooms_text'] == num_bathrooms_dd]
+    # filter_df = filter_df.loc[filter_df['bedrooms'] >= float(num_bedrooms_dd)]
+    # filter_df = filter_df.loc[filter_df['room_type'] == listing_dd]
+    # figure = create_figure(city_df, city_dd)
 
-        #if len(filter_df) == 0:
-            #city_df = df.loc[df['City'] == city_dd]
-            #figure = create_figure(city_df, city_dd)
-        #else:
-            #figure = create_figure(filter_df, city_dd)
+    # if len(filter_df) == 0:
+    # city_df = df.loc[df['City'] == city_dd]
+    # figure = create_figure(city_df, city_dd)
+    # else:
+    # figure = create_figure(filter_df, city_dd)
     return figure
+
 
 @app.callback(
     Output('prediction-output','value'),
