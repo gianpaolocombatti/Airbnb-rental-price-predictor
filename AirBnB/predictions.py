@@ -15,6 +15,7 @@ import dash_bootstrap_components as dbc
 
 from app import app
 
+
 def get_layout(center_lat, center_long):
     key = 'pk.eyJ1IjoiY2djb2xsaW5zOTEiLCJhIjoiY2txNDlzd2pwMTZlbjJ1bzR5M2xtbDM3cyJ9.JJ9ja2pcERkn2guyEVivg'
     map = dict(
@@ -47,8 +48,8 @@ def get_layout(center_lat, center_long):
 
 
 def create_figure(df, city):
-    center_lat = sum(df.latitude)/len(df.latitude)
-    center_long = sum(df.longitude)/len(df.longitude)
+    center_lat = sum(df.latitude) / len(df.latitude)
+    center_long = sum(df.longitude) / len(df.longitude)
     layout_map = get_layout(center_lat, center_long)
     figure = {
         "data": [{
@@ -58,8 +59,8 @@ def create_figure(df, city):
             "hoverinfo": "text",
             "hovertext": [["Neighborhood: {} Price: {} Rating: {} Beds: {} Bath:{}".format(i, j, k, n, m)]
                           for i, j, k, n, m in zip(df['neighbourhood'], df['price'], df['review_scores_rating'],
-                              df['bedrooms'], df['bathrooms_text'],
-                              )],
+                                                   df['bedrooms'], df['bathrooms_text'],
+                                                   )],
             "mode": "markers",
             "name": city,
             "marker": {
@@ -71,8 +72,6 @@ def create_figure(df, city):
         "layout": layout_map
     }
     return figure
-
-
 
 
 # external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
@@ -98,78 +97,78 @@ bath_options = city_df['bathrooms_text'].unique()
 bed_options = city_df['beds'].unique()
 
 layout = html.Div(children=[
-        html.Div(
-            html.H4(children="Select City:")
-        ),
-        html.Div(children=[
-            dcc.Dropdown(id='city_dd',
-                         options=[{'label': i, 'value': i} for i in cities],
-                         value='united-states, tx, austin', placeholder='united-states, tx, austin',
-                         style={'height': 50, 'width': 500,}),
-            dcc.Store(id='current_city', storage_type='session', data='Austin, TX'),
-        ]),
-        html.Div(className='row',
-                 children=[
-                     html.Div(
-                             dcc.Textarea(id='Static_listing_type_text',
-                                          value='Select Listing Type:',
-                                          className="three columns",
-                                          style={'height': 50, 'width': 200, "margin-left": "15px"},
-                                          disabled=True)
-                    ),
-                     html.Div(
-                         dcc.Dropdown(id='listing_dd',
-                                      options=[{'label': i, 'value': i} for i in room_type],
-                                      value=room_type[0], placeholder=room_type[0],
-                                      className="three columns",
-                                      style={'height':50, 'width': 200, 'color': 'black'},
-                                      )
-                            ),
-                     html.Div(
-                         dcc.Textarea(id='Static_num_bathrooms_text',
-                                      value='Select # of bathrooms:',
-                                      className="twelve columns",
-                                      style={'height': 50, 'width': 175, "margin-left": "15px"},
-                                      disabled=True)
-                             ),
-                     html.Div(
-                         dcc.Dropdown(id='num_bathrooms_dd',
-                                      options=[{'label': i, 'value': i} for i in bath_options],
-                                      value='1 bath', placeholder='1 bath',
-                                      className="three columns",
-                                      style={'height': 50, 'width': 150, 'color': 'black'},
-                                      )
-                     ),
-                     html.Div(
-                         dcc.Textarea(id='Static_num_bedrooms_text',
-                                      value='Select # of Beds:',
-                                      className="three columns",
-                                      style={'height': 50, 'width': 175, "margin-left": "15px"},
-                                      disabled=True)
-                     ),
-                     html.Div(
-                         dcc.Dropdown(id='num_bedrooms_dd',
-                                      options=[{'label': i, 'value': i} for i in bed_options],
-                                      value='1', placeholder='1',
-                                      className="three columns",
-                                      style={'height': 50, 'width': 150, 'color': 'black'},
-                                      )
-                     ),
-                         ]
-                     ),
+    html.Div(
+        html.H4(children="Select City:")
+    ),
+    html.Div(children=[
+        dcc.Dropdown(id='city_dd',
+                     options=[{'label': i, 'value': i} for i in cities],
+                     value='united-states, tx, austin', placeholder='united-states, tx, austin',
+                     style={'height': 50, 'width': 500, }),
+        dcc.Store(id='current_city', storage_type='session', data='Austin, TX'),
+    ]),
+    html.Div(className='row',
+             children=[
+                 html.Div(
+                     dcc.Textarea(id='Static_listing_type_text',
+                                  value='Select Listing Type:',
+                                  className="three columns",
+                                  style={'height': 50, 'width': 200, "margin-left": "15px"},
+                                  disabled=True)
+                 ),
+                 html.Div(
+                     dcc.Dropdown(id='listing_dd',
+                                  options=[{'label': i, 'value': i} for i in room_type],
+                                  value=room_type[0], placeholder=room_type[0],
+                                  className="three columns",
+                                  style={'height': 50, 'width': 200, 'color': 'black'},
+                                  )
+                 ),
+                 html.Div(
+                     dcc.Textarea(id='Static_num_bathrooms_text',
+                                  value='Select # of bathrooms:',
+                                  className="twelve columns",
+                                  style={'height': 50, 'width': 175, "margin-left": "15px"},
+                                  disabled=True)
+                 ),
+                 html.Div(
+                     dcc.Dropdown(id='num_bathrooms_dd',
+                                  options=[{'label': i, 'value': i} for i in bath_options],
+                                  value='1 bath', placeholder='1 bath',
+                                  className="three columns",
+                                  style={'height': 50, 'width': 150, 'color': 'black'},
+                                  )
+                 ),
+                 html.Div(
+                     dcc.Textarea(id='Static_num_bedrooms_text',
+                                  value='Select # of Beds:',
+                                  className="three columns",
+                                  style={'height': 50, 'width': 175, "margin-left": "15px"},
+                                  disabled=True)
+                 ),
+                 html.Div(
+                     dcc.Dropdown(id='num_bedrooms_dd',
+                                  options=[{'label': i, 'value': i} for i in bed_options],
+                                  value='1', placeholder='1',
+                                  className="three columns",
+                                  style={'height': 50, 'width': 150, 'color': 'black'},
+                                  )
+                 ),
+             ]
+             ),
     html.Div(className='row', children=[
         html.Div(children=[
             html.Button('Filter Listings for Selected Options', id='filter_button', n_clicks=0),
             dcc.Store(id='session', storage_type='session', data=clicks),
 
-                    ])]
+        ])]
              ),
     html.Div(className='row', children=[
         html.Div(children=[
             dcc.Graph(
-             id='MapPlot', figure=create_figure(city_df, 'Austin, TX')
-                    )
-            ]
+                id='MapPlot', figure=create_figure(city_df, 'Austin, TX')
+            )
+        ]
         ),
         html.Div(
             dcc.Textarea(id='prediction-output',
@@ -177,9 +176,10 @@ layout = html.Div(children=[
                          className="two columns",
                          style={'height': 100, 'width': 300, "margin-left": "15px"},
                          disabled=True))
-        ])
-    ]
+    ])
+]
 )
+
 
 @app.callback(
     Output('MapPlot', 'figure'),
@@ -198,13 +198,13 @@ def update_city_data(city_dd, num_bedrooms_dd, num_bathrooms_dd,
     filter_df = filter_df.loc[filter_df['bathrooms_text'] == num_bathrooms_dd]
     filter_df = filter_df.loc[filter_df['bedrooms'] >= float(num_bedrooms_dd)]
     filter_df = filter_df.loc[filter_df['room_type'] == listing_dd]
-    #figure = create_figure(filter_df, city_dd)
+    # figure = create_figure(filter_df, city_dd)
     if len(filter_df) == 0:
-     figure = create_figure(df_alpha, city_dd)
+        figure = create_figure(df_alpha, city_dd)
     else:
-     figure = create_figure(filter_df, city_dd)
+        figure = create_figure(filter_df, city_dd)
 
-    #if current_city != city_dd:
+    # if current_city != city_dd:
     # city_df = city_df.loc[df['City'] == city_dd]
     # filter_df = df.loc[df['City'] == city_dd].copy()
     # filter_df['bedrooms'] = filter_df['bedrooms'].astype('float')
@@ -222,11 +222,12 @@ def update_city_data(city_dd, num_bedrooms_dd, num_bathrooms_dd,
 
 
 @app.callback(
-    Output('prediction-output','value'),
-    [Input('num_bedrooms_dd', 'value'),
-    Input('num_bathrooms_dd', 'value'),
-    Input('listing_dd', 'value'),
-         ]
+    Output('prediction-output', 'value'),
+    [Input('city_dd', 'value'),
+     Input('num_bedrooms_dd', 'value'),
+     Input('num_bathrooms_dd', 'value'),
+     Input('listing_dd', 'value'),
+     ]
 )
 def predict_price(city_dd, num_bedrooms_dd, num_bathrooms_dd, listing_dd):
     df_predict = pd.DataFrame(
