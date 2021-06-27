@@ -184,22 +184,22 @@ layout = html.Div(children=[
 @app.callback(
     Output('MapPlot', 'figure'),
     [Input('city_dd', 'value')],
-    state=[State('num_bedrooms_dd', 'value'),
-           State('num_bathrooms_dd', 'value'),
-           State('listing_dd', 'value'),
-           State('current_city', 'data'),
+    [Input('num_bedrooms_dd', 'value'),
+     Input('num_bathrooms_dd', 'value'),
+     Input('listing_dd', 'value'),
+     Input('current_city', 'data')
            ]
 )
 def update_city_data(city_dd, num_bedrooms_dd, num_bathrooms_dd,
                      listing_dd, current_city):
     df_alpha = load_listing(dir_value=city_dd)
-    filter_df = df_alpha.loc[df_alpha['bedrooms'] != 'Missing'].copy()
+    filter_df = df_alpha.copy()
     filter_df['bedrooms'] = filter_df['bedrooms'].astype('float')
     filter_df = filter_df.loc[filter_df['bathrooms_text'] == num_bathrooms_dd]
     filter_df = filter_df.loc[filter_df['bedrooms'] >= float(num_bedrooms_dd)]
     filter_df = filter_df.loc[filter_df['room_type'] == listing_dd]
     # figure = create_figure(filter_df, city_dd)
-    if len(filter_df) == 0:
+    if len(filter_df) <= 10:
         figure = create_figure(df_alpha, city_dd)
     else:
         figure = create_figure(filter_df, city_dd)
