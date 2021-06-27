@@ -228,24 +228,24 @@ def update_city_data(city_dd, num_bedrooms_dd, num_bathrooms_dd,
     Input('listing_dd', 'value'),
          ]
 )
-def predict_price(num_bedrooms_dd, num_bathrooms_dd, listing_dd):
-
+def predict_price(city_dd, num_bedrooms_dd, num_bathrooms_dd, listing_dd):
     df_predict = pd.DataFrame(
-        columns = ['bedrooms', 'bathrooms_text', 'room_type'],
-        data = [[num_bedrooms_dd, num_bathrooms_dd, listing_dd]])
-    new = city_df.copy()
+        columns=['bedrooms', 'bathrooms_text', 'room_type'],
+        data=[[num_bedrooms_dd, num_bathrooms_dd, listing_dd]])
+    new = load_listing(dir_value=city_dd)
     new = new[['bedrooms', 'bathrooms_text', 'room_type', 'price']]
     shared, private = bathroom_text_encoder(df_predict)
     df_predict['shared_bathrooms'] = shared
     df_predict['private_bathrooms'] = private
     df_predict.drop(columns=['bathrooms_text'], inplace=True)
     new = new.replace("Missing", None)
-    pipe, oh, stand, simp, kneigh = pipeline_model(new, cols_to_keep=['bathrooms_text', 'bedrooms', 'room_type', 'price'])
+    pipe, oh, stand, simp, kneigh = pipeline_model(new,
+                                                   cols_to_keep=['bathrooms_text', 'bedrooms', 'room_type', 'price'])
     one = oh.transform(df_predict)
     two = stand.transform(one)
     three = simp.transform(two)
     four = kneigh.kneighbors(three, n_neighbors=20)
     y_pred = pipe.predict(df_predict)[0]
     near_neighbors = four[1]
-    value = f'${y_pred} is the optimal rental price for the property'
+    value = f'{y_pred} is the optimal rental price for the property'
     return value
