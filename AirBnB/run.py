@@ -8,15 +8,15 @@ from flask_login import UserMixin
 import sqlite3
 from sqlalchemy import Table, create_engine
 import dash_bootstrap_components as dbc
-from .pages import index
-from .pages import predictions
+from pages import index
+from pages import predictions
 import dash
 import os
 import warnings
 import configparser
-from .neighbors_model import bathroom_text_encoder, pipeline_model
+from neighbors_model import bathroom_text_encoder, pipeline_model
 import pandas as pd
-from .data_loading import load_listing
+from data_loading import load_listing
 
 def get_layout(center_lat, center_long):
     key = 'pk.eyJ1IjoiY2djb2xsaW5zOTEiLCJhIjoiY2txNDlzd2pwMTZlbjJ1bzR5M2xtbDM3cyJ9.JJ9ja2pcERkn2guyEVivg'
