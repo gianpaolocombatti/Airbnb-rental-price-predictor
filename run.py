@@ -1,4 +1,4 @@
-from flask_login import login_user, logout_user, current_user, LoginManager, UserMixin
+from flask_login import login_user, logout_user, current_user, LoginManager
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output, State
@@ -8,15 +8,13 @@ from flask_login import UserMixin
 import sqlite3
 from sqlalchemy import Table, create_engine
 import dash_bootstrap_components as dbc
-from sqlalchemy.sql import select
 import dash
 import os
 import warnings
 import configparser
-import random
-from .neighbors_model import bathroom_text_encoder, pipeline_model
+from neighbors_model import bathroom_text_encoder, pipeline_model
 import pandas as pd
-from .data_loading import load_listing
+from data_loading import load_listing
 
 external_stylesheets = [
     dbc.themes.UNITED, # Bootswatch theme
@@ -121,8 +119,8 @@ city_df['size'] = 5
 
 
 warnings.filterwarnings("ignore")
-conn = sqlite3.connect('AirBnB/data.sqlite')
-engine = create_engine('sqlite:///AirBnB/data.sqlite')
+sqlite3.connect('data.sqlite')
+engine = create_engine('sqlite:///data.sqlite')
 db = SQLAlchemy()
 config = configparser.ConfigParser()
 
@@ -478,4 +476,5 @@ def predict_price(city_dd, num_bedrooms_dd, num_bathrooms_dd, listing_dd, lat_dd
     figure = create_figure(final_df, city_dd)
     return value, figure
 
-
+if __name__ == "__main__":
+    app.run_server(debug=True, threaded=False, processes=2)
