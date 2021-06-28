@@ -166,6 +166,24 @@ layout = html.Div(children=[
 
         ])]
              ),
+    html.Div(className='row',
+                 children=[
+                html.Div(
+                    html.H6(children="Latitude:")
+                    ),
+                 dcc.Input(id="lat_dd", placeholder=50, type="number"),
+                 html.Br(),
+                 html.P(id="output")
+                ]),
+    html.Div(className='row',
+                     children=[
+                    html.Div(
+                        html.H6(children="Longitude:")
+                        ),
+                     dcc.Input(id="long_dd", placeholder=50, type="number"),
+                     html.Br(),
+                     html.P(id="output")
+                    ]),
     html.Div(className='row', children=[
         html.Div(children=[
             dcc.Graph(
@@ -191,23 +209,26 @@ layout = html.Div(children=[
      Input('num_bedrooms_dd', 'value'),
      Input('num_bathrooms_dd', 'value'),
      Input('listing_dd', 'value'),
+     Input('lat_dd', 'value'),
+     Input('long_dd', 'value'),
      ]
 )
-def predict_price(city_dd, num_bedrooms_dd, num_bathrooms_dd, listing_dd):
+def predict_price(city_dd, num_bedrooms_dd, num_bathrooms_dd, listing_dd, lat_dd, long_dd):
     df_predict = pd.DataFrame(
-        columns=['bedrooms', 'bathrooms_text', 'room_type'],
-        data=[[num_bedrooms_dd, num_bathrooms_dd, listing_dd]])
+        columns=['bedrooms', 'bathrooms_text', 'room_type', 'latitude', 'longitude'],
+        data=[[num_bedrooms_dd, num_bathrooms_dd, listing_dd, lat_dd, long_dd]])
     new = load_listing(dir_value=city_dd)
     new['color'] = 'red'
     new['size'] = 5
-    new1 = new[['bedrooms', 'bathrooms_text', 'room_type', 'price']]
+    new1 = new[['bedrooms', 'bathrooms_text', 'room_type', 'price', 'latitude', 'longitude']]
     shared, private = bathroom_text_encoder(df_predict)
     df_predict['shared_bathrooms'] = shared
     df_predict['private_bathrooms'] = private
     df_predict.drop(columns=['bathrooms_text'], inplace=True)
     new1 = new1.replace("Missing", None)
     pipe, oh, stand, simp, kneigh = pipeline_model(new1,
-                                                   cols_to_keep=['bathrooms_text', 'bedrooms', 'room_type', 'price'])
+                                                   cols_to_keep=['bathrooms_text', 'bedrooms', 'room_type',
+                                                                 'price', 'latitude', 'longitude'])
     one = oh.transform(df_predict)
     two = stand.transform(one)
     three = simp.transform(two)
