@@ -13,7 +13,7 @@ import plotly.express as px
 from data_loading import load_listing
 import dash_bootstrap_components as dbc
 
-from app import app
+from run import app
 
 def get_layout(center_lat, center_long):
     key = 'pk.eyJ1IjoiY2djb2xsaW5zOTEiLCJhIjoiY2txNDlzd2pwMTZlbjJ1bzR5M2xtbDM3cyJ9.JJ9ja2pcERkn2guyEVivg'
@@ -98,78 +98,95 @@ bath_options = city_df['bathrooms_text'].unique()
 bed_options = city_df['beds'].unique()
 
 layout = html.Div(children=[
-        html.Div(
-            html.H4(children="Select City:")
-        ),
-        html.Div(children=[
-            dcc.Dropdown(id='city_dd',
-                         options=[{'label': i, 'value': i} for i in cities],
-                         value='united-states, tx, austin', placeholder='united-states, tx, austin',
-                         style={'height': 50, 'width': 500,}),
-            dcc.Store(id='current_city', storage_type='session', data='Austin, TX'),
-        ]),
-        html.Div(className='row',
-                 children=[
-                     html.Div(
-                             dcc.Textarea(id='Static_listing_type_text',
-                                          value='Select Listing Type:',
-                                          className="three columns",
-                                          style={'height': 50, 'width': 200, "margin-left": "15px"},
-                                          disabled=True)
-                    ),
-                     html.Div(
-                         dcc.Dropdown(id='listing_dd',
-                                      options=[{'label': i, 'value': i} for i in room_type],
-                                      value=room_type[0], placeholder=room_type[0],
-                                      className="three columns",
-                                      style={'height':50, 'width': 200, 'color': 'black'},
-                                      )
-                            ),
-                     html.Div(
-                         dcc.Textarea(id='Static_num_bathrooms_text',
-                                      value='Select # of bathrooms:',
-                                      className="twelve columns",
-                                      style={'height': 50, 'width': 175, "margin-left": "15px"},
-                                      disabled=True)
-                             ),
-                     html.Div(
-                         dcc.Dropdown(id='num_bathrooms_dd',
-                                      options=[{'label': i, 'value': i} for i in bath_options],
-                                      value='1 bath', placeholder='1 bath',
-                                      className="three columns",
-                                      style={'height': 50, 'width': 150, 'color': 'black'},
-                                      )
-                     ),
-                     html.Div(
-                         dcc.Textarea(id='Static_num_bedrooms_text',
-                                      value='Select # of Beds:',
-                                      className="three columns",
-                                      style={'height': 50, 'width': 175, "margin-left": "15px"},
-                                      disabled=True)
-                     ),
-                     html.Div(
-                         dcc.Dropdown(id='num_bedrooms_dd',
-                                      options=[{'label': i, 'value': i} for i in bed_options],
-                                      value='1', placeholder='1',
-                                      className="three columns",
-                                      style={'height': 50, 'width': 150, 'color': 'black'},
-                                      )
-                     ),
-                         ]
-                     ),
+    html.Div(
+        html.H4(children="Select City:")
+    ),
+    html.Div(children=[
+        dcc.Dropdown(id='city_dd',
+                     options=[{'label': i, 'value': i} for i in cities],
+                     value='united-states, tx, austin', placeholder='united-states, tx, austin',
+                     style={'height': 50, 'width': 500, }),
+        dcc.Store(id='current_city', storage_type='session', data='Austin, TX'),
+    ]),
+    html.Div(className='row',
+             children=[
+                 html.Div(
+                     dcc.Textarea(id='Static_listing_type_text',
+                                  value='Select Listing Type:',
+                                  className="three columns",
+                                  style={'height': 50, 'width': 200, "margin-left": "15px"},
+                                  disabled=True)
+                 ),
+                 html.Div(
+                     dcc.Dropdown(id='listing_dd',
+                                  options=[{'label': i, 'value': i} for i in room_type],
+                                  value=room_type[0], placeholder=room_type[0],
+                                  className="three columns",
+                                  style={'height': 50, 'width': 200, 'color': 'black'},
+                                  )
+                 ),
+                 html.Div(
+                     dcc.Textarea(id='Static_num_bathrooms_text',
+                                  value='Select # of bathrooms:',
+                                  className="twelve columns",
+                                  style={'height': 50, 'width': 175, "margin-left": "15px"},
+                                  disabled=True)
+                 ),
+                 html.Div(
+                     dcc.Dropdown(id='num_bathrooms_dd',
+                                  options=[{'label': i, 'value': i} for i in bath_options],
+                                  value='1 bath', placeholder='1 bath',
+                                  className="three columns",
+                                  style={'height': 50, 'width': 150, 'color': 'black'},
+                                  )
+                 ),
+                 html.Div(
+                     dcc.Textarea(id='Static_num_bedrooms_text',
+                                  value='Select # of Beds:',
+                                  className="three columns",
+                                  style={'height': 50, 'width': 175, "margin-left": "15px"},
+                                  disabled=True)
+                 ),
+                 html.Div(
+                     dcc.Dropdown(id='num_bedrooms_dd',
+                                  options=[{'label': i, 'value': i} for i in bed_options],
+                                  value='1', placeholder='1',
+                                  className="three columns",
+                                  style={'height': 50, 'width': 150, 'color': 'black'},
+                                  )
+                 ),
+             ]
+             ),
     html.Div(className='row', children=[
         html.Div(children=[
             html.Button('Filter Listings for Selected Options', id='filter_button', n_clicks=0),
             dcc.Store(id='session', storage_type='session', data=clicks),
-
-                    ])]
+        ])]
              ),
+    html.Div(className='row',
+                 children=[
+                html.Div(
+                    html.H6(children="Latitude:")
+                    ),
+                 dcc.Input(id="lat_dd", placeholder=center_lat, type="number"),
+                 html.Br(),
+                 html.P(id="output")
+                ]),
+    html.Div(className='row',
+                     children=[
+                    html.Div(
+                        html.H6(children="Longitude:")
+                        ),
+                     dcc.Input(id="long_dd", placeholder=center_long, type="number"),
+                     html.Br(),
+                     html.P(id="output")
+                    ]),
     html.Div(className='row', children=[
         html.Div(children=[
             dcc.Graph(
-             id='MapPlot', figure=create_figure(city_df, 'Austin, TX')
-                    )
-            ]
+                id='MapPlot', figure=create_figure(city_df, 'Austin, TX')
+            )
+        ]
         ),
         html.Div(
             dcc.Textarea(id='prediction-output',
@@ -177,8 +194,8 @@ layout = html.Div(children=[
                          className="two columns",
                          style={'height': 100, 'width': 300, "margin-left": "15px"},
                          disabled=True))
-        ])
-    ]
+    ])
+]
 )
 
 @app.callback(

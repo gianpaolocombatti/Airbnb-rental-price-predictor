@@ -5,7 +5,7 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 import plotly.express as px
 
-from app import app
+from run import app
 
 column1 = dbc.Col(
     [
@@ -17,7 +17,7 @@ column1 = dbc.Col(
             
             """
         ),
-        dcc.Link(dbc.Button('Predict Price', color='primary'), href='/predictions')
+        dcc.Link(dbc.Button('Check it out!', color='primary'), href='/create')
     ],
     md=4,
 )
