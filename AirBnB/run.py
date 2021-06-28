@@ -202,7 +202,7 @@ success = html.Div([dcc.Location(id='url_login_success', refresh=True)
             , html.Div([html.H2('Login successful.')
                     , html.Br()
                     , html.P('Go to Predictor')
-                    , dcc.Link(dbc.Button('Predict', color='primary'), href = '/predictions')
+                    , dcc.Link(dbc.Button('Predict', color='primary'), href='/predictions')
                 ]) #end div
             , html.Div([html.Br()
                     , html.Button(id='back-button', children='Go back', n_clicks=0)
