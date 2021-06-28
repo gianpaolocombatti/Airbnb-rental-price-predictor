@@ -22,7 +22,6 @@ pipenv==2020.11.15
 python-dateutil==1.5
 pytz==2013.7
 scandir==1.10.0
-scipy==0.13.0b1
 singledispatch==3.6.1
 six==1.12.0
 typing==3.7.4.3
