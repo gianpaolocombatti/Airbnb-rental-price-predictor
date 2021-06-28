@@ -64,9 +64,11 @@ def create_figure(df, city):
             "mode": "markers",
             "name": city,
             "marker": {
-                "size": 5,
+                "size": df['size'],
                 "opacity": 0.7,
-                "color": '#F70F0F'
+                "color": df['color'],
+                "color_discrete_map": {'yes': 'red', 'no': 'blue'},
+                "color_discrete_sequence": ['blue', 'red']
             }
         }],
         "layout": layout_map
@@ -74,7 +76,6 @@ def create_figure(df, city):
     return figure
 
 
-# external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 dir_value = 'united-states, tx, austin'
 city_df, keys = load_listing(dir_value=dir_value, list_names=True)
 for column in city_df.columns:
@@ -95,6 +96,8 @@ cities = [x for x in keys]
 room_type = city_df['room_type'].unique()
 bath_options = city_df['bathrooms_text'].unique()
 bed_options = city_df['beds'].unique()
+city_df['color'] = 'red'
+city_df['size'] = 5
 
 layout = html.Div(children=[
     html.Div(
@@ -182,47 +185,8 @@ layout = html.Div(children=[
 
 
 @app.callback(
-    Output('MapPlot', 'figure'),
-    [Input('city_dd', 'value')],
-    [Input('num_bedrooms_dd', 'value'),
-     Input('num_bathrooms_dd', 'value'),
-     Input('listing_dd', 'value'),
-     Input('current_city', 'data')
-           ]
-)
-def update_city_data(city_dd, num_bedrooms_dd, num_bathrooms_dd,
-                     listing_dd, current_city):
-    df_alpha = load_listing(dir_value=city_dd)
-    filter_df = df_alpha.copy()
-    filter_df['bedrooms'] = filter_df['bedrooms'].astype('float')
-    filter_df = filter_df.loc[filter_df['bathrooms_text'] == num_bathrooms_dd]
-    filter_df = filter_df.loc[filter_df['bedrooms'] >= float(num_bedrooms_dd)]
-    filter_df = filter_df.loc[filter_df['room_type'] == listing_dd]
-    # figure = create_figure(filter_df, city_dd)
-    if len(filter_df) <= 10:
-        figure = create_figure(df_alpha, city_dd)
-    else:
-        figure = create_figure(filter_df, city_dd)
-
-    # if current_city != city_dd:
-    # city_df = city_df.loc[df['City'] == city_dd]
-    # filter_df = df.loc[df['City'] == city_dd].copy()
-    # filter_df['bedrooms'] = filter_df['bedrooms'].astype('float')
-    # filter_df = filter_df.loc[filter_df['bathrooms_text'] == num_bathrooms_dd]
-    # filter_df = filter_df.loc[filter_df['bedrooms'] >= float(num_bedrooms_dd)]
-    # filter_df = filter_df.loc[filter_df['room_type'] == listing_dd]
-    # figure = create_figure(city_df, city_dd)
-
-    # if len(filter_df) == 0:
-    # city_df = df.loc[df['City'] == city_dd]
-    # figure = create_figure(city_df, city_dd)
-    # else:
-    # figure = create_figure(filter_df, city_dd)
-    return figure
-
-
-@app.callback(
     Output('prediction-output', 'value'),
+    Output('MapPlot', 'figure'),
     [Input('city_dd', 'value'),
      Input('num_bedrooms_dd', 'value'),
      Input('num_bathrooms_dd', 'value'),
@@ -234,13 +198,15 @@ def predict_price(city_dd, num_bedrooms_dd, num_bathrooms_dd, listing_dd):
         columns=['bedrooms', 'bathrooms_text', 'room_type'],
         data=[[num_bedrooms_dd, num_bathrooms_dd, listing_dd]])
     new = load_listing(dir_value=city_dd)
-    new = new[['bedrooms', 'bathrooms_text', 'room_type', 'price']]
+    new['color'] = 'red'
+    new['size'] = 5
+    new1 = new[['bedrooms', 'bathrooms_text', 'room_type', 'price']]
     shared, private = bathroom_text_encoder(df_predict)
     df_predict['shared_bathrooms'] = shared
     df_predict['private_bathrooms'] = private
     df_predict.drop(columns=['bathrooms_text'], inplace=True)
-    new = new.replace("Missing", None)
-    pipe, oh, stand, simp, kneigh = pipeline_model(new,
+    new1 = new1.replace("Missing", None)
+    pipe, oh, stand, simp, kneigh = pipeline_model(new1,
                                                    cols_to_keep=['bathrooms_text', 'bedrooms', 'room_type', 'price'])
     one = oh.transform(df_predict)
     two = stand.transform(one)
@@ -249,4 +215,15 @@ def predict_price(city_dd, num_bedrooms_dd, num_bathrooms_dd, listing_dd):
     y_pred = pipe.predict(df_predict)[0]
     near_neighbors = four[1]
     value = f'{y_pred} is the optimal rental price for the property'
-    return value
+    filter_df = new.copy()
+    filter_df['bedrooms'] = filter_df['bedrooms'].astype('float')
+    filter_df = filter_df.loc[filter_df['bathrooms_text'] == num_bathrooms_dd]
+    filter_df = filter_df.loc[filter_df['bedrooms'] >= float(num_bedrooms_dd)]
+    filter_df = filter_df.loc[filter_df['room_type'] == listing_dd]
+    for x in near_neighbors:
+        beta = new.loc[x]
+        beta['color'] = 'blue'
+        beta['size'] = 20
+        final_df = pd.concat([filter_df, beta])
+    figure = create_figure(final_df, city_dd)
+    return value, figure
