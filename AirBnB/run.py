@@ -479,8 +479,3 @@ def create_app():
         return value, figure
 
     return app
-
-
-APP = create_app()
-
-APP.run_server(debug=False)
