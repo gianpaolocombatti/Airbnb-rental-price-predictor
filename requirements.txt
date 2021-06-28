@@ -20,7 +20,6 @@ pathlib2==2.3.5
 pipenv==2020.11.15
 py2app==0.7.3
 pycparser==2.19
-pyobjc-core==2.5.1
 pyOpenSSL==19.0.0
 pyparsing==2.0.1
 python-dateutil==1.5
