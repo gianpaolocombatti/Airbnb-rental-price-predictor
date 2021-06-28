@@ -13,7 +13,7 @@ import plotly.express as px
 from data_loading import load_listing
 import dash_bootstrap_components as dbc
 
-from run import app
+from ..run import app
 
 def get_layout(center_lat, center_long):
     key = 'pk.eyJ1IjoiY2djb2xsaW5zOTEiLCJhIjoiY2txNDlzd2pwMTZlbjJ1bzR5M2xtbDM3cyJ9.JJ9ja2pcERkn2guyEVivg'

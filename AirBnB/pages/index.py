@@ -5,7 +5,7 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 import plotly.express as px
 
-from run import app
+from ..run import app
 
 column1 = dbc.Col(
     [
