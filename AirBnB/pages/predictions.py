@@ -1,17 +1,7 @@
-from dash.exceptions import PreventUpdate
-from ..neighbors_model import bathroom_text_encoder, pipeline_model
 import pandas as pd
-import numpy as np
-import json
-import os
-import flask
-from dash import Dash
-from dash.dependencies import Output, Input, State
 import dash_core_components as dcc
 import dash_html_components as html
-import plotly.express as px
 from ..data_loading import load_listing
-import dash_bootstrap_components as dbc
 
 
 def get_layout(center_lat, center_long):
