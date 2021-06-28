@@ -1,5 +1,5 @@
 from dash.exceptions import PreventUpdate
-from neighbors_model import bathroom_text_encoder, pipeline_model
+from ..neighbors_model import bathroom_text_encoder, pipeline_model
 import pandas as pd
 import numpy as np
 import json
@@ -10,10 +10,9 @@ from dash.dependencies import Output, Input, State
 import dash_core_components as dcc
 import dash_html_components as html
 import plotly.express as px
-from data_loading import load_listing
+from ..data_loading import load_listing
 import dash_bootstrap_components as dbc
 
-from ..run import app
 
 def get_layout(center_lat, center_long):
     key = 'pk.eyJ1IjoiY2djb2xsaW5zOTEiLCJhIjoiY2txNDlzd2pwMTZlbjJ1bzR5M2xtbDM3cyJ9.JJ9ja2pcERkn2guyEVivg'
@@ -197,73 +196,3 @@ layout = html.Div(children=[
     ])
 ]
 )
-
-@app.callback(
-    Output('MapPlot', 'figure'),
-    [Input('city_dd', 'value')],
-    state=[State('num_bedrooms_dd', 'value'),
-           State('num_bathrooms_dd', 'value'),
-           State('listing_dd', 'value'),
-           State('current_city', 'data'),
-           ]
-)
-def update_city_data(city_dd, num_bedrooms_dd, num_bathrooms_dd,
-                     listing_dd,  current_city):
-
-    city_df = load_listing(dir_value=city_dd)
-    filter_df = city_df.loc[city_df['bedrooms'] != 'Missing'].copy()
-    filter_df['bedrooms'] = filter_df['bedrooms'].astype('float')
-    filter_df = filter_df.loc[filter_df['bathrooms_text'] == num_bathrooms_dd]
-    filter_df = filter_df.loc[filter_df['bedrooms'] >= float(num_bedrooms_dd)]
-    filter_df = filter_df.loc[filter_df['room_type'] == listing_dd]
-    figure = create_figure(filter_df, city_dd)
-    #if len(filter_df) == 0:
-        #city_df = city_df.loc[city_df['City'] == city_dd]
-        #figure = create_figure(city_df, city_dd)
-    #else:
-        #figure = create_figure(filter_df, city_dd)
-
-    #if current_city != city_dd:
-        #city_df = city_df.loc[df['City'] == city_dd]
-        #filter_df = df.loc[df['City'] == city_dd].copy()
-        #filter_df['bedrooms'] = filter_df['bedrooms'].astype('float')
-        #filter_df = filter_df.loc[filter_df['bathrooms_text'] == num_bathrooms_dd]
-        #filter_df = filter_df.loc[filter_df['bedrooms'] >= float(num_bedrooms_dd)]
-        #filter_df = filter_df.loc[filter_df['room_type'] == listing_dd]
-        #figure = create_figure(city_df, city_dd)
-
-        #if len(filter_df) == 0:
-            #city_df = df.loc[df['City'] == city_dd]
-            #figure = create_figure(city_df, city_dd)
-        #else:
-            #figure = create_figure(filter_df, city_dd)
-    return figure
-
-@app.callback(
-    Output('prediction-output','value'),
-    [Input('num_bedrooms_dd', 'value'),
-    Input('num_bathrooms_dd', 'value'),
-    Input('listing_dd', 'value'),
-         ]
-)
-def predict_price(num_bedrooms_dd, num_bathrooms_dd, listing_dd):
-
-    df_predict = pd.DataFrame(
-        columns = ['bedrooms', 'bathrooms_text', 'room_type'],
-        data = [[num_bedrooms_dd, num_bathrooms_dd, listing_dd]])
-    new = city_df.copy()
-    new = new[['bedrooms', 'bathrooms_text', 'room_type', 'price']]
-    shared, private = bathroom_text_encoder(df_predict)
-    df_predict['shared_bathrooms'] = shared
-    df_predict['private_bathrooms'] = private
-    df_predict.drop(columns=['bathrooms_text'], inplace=True)
-    new = new.replace("Missing", None)
-    pipe, oh, stand, simp, kneigh = pipeline_model(new, cols_to_keep=['bathrooms_text', 'bedrooms', 'room_type', 'price'])
-    one = oh.transform(df_predict)
-    two = stand.transform(one)
-    three = simp.transform(two)
-    four = kneigh.kneighbors(three, n_neighbors=20)
-    y_pred = pipe.predict(df_predict)[0]
-    near_neighbors = four[1]
-    value = f'${y_pred} is the optimal rental price for the property'
-    return value

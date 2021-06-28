@@ -14,9 +14,9 @@ import dash
 import os
 import warnings
 import configparser
-from .neighbors_model import bathroom_text_encoder, pipeline_model
+from neighbors_model import bathroom_text_encoder, pipeline_model
 import pandas as pd
-from .data_loading import load_listing
+from data_loading import load_listing
 
 def get_layout(center_lat, center_long):
     key = 'pk.eyJ1IjoiY2djb2xsaW5zOTEiLCJhIjoiY2txNDlzd2pwMTZlbjJ1bzR5M2xtbDM3cyJ9.JJ9ja2pcERkn2guyEVivg'
