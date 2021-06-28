@@ -350,4 +350,4 @@ def predict_price(city_dd, num_bedrooms_dd, num_bathrooms_dd, listing_dd, lat_dd
     return value, figure
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server()
