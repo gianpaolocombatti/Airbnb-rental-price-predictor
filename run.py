@@ -471,6 +471,8 @@ def update_output(n_clicks, input1, input2):
     Output('prediction-output', 'value'),
     Output('MaPlot', 'figure'),
     Output('table', 'data'),
+    Output('lat_dd', 'value'),
+    Output('long_dd', 'value'),
     [Input('city_dd', 'value'),
      Input('num_bedrooms_dd', 'value'),
      Input('num_bathrooms_dd', 'value'),
@@ -518,7 +520,12 @@ def predict_price(city_dd, num_bedrooms_dd, num_bathrooms_dd, listing_dd, lat_dd
         final_df = pd.concat([filter_df, beta])
     figure = create_figure(final_df, city_dd)
     df_gen = beta[['listing_url', 'price']].to_dict('records')
-    return value, figure, df_gen
+    lat = new1['latitude']
+    long = new1['longitude']
+    n = len(lat)
+    center_lat = sum(lat) / n
+    center_long = sum(long) / n
+    return value, figure, df_gen, center_lat, center_long
 
 
 if __name__ == "__main__":
