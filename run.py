@@ -97,6 +97,15 @@ def create_figure(df, city):
     }
     return figure
 
+def create_df_dict():
+    """creates dataframe for table, returns
+    first twenty listings"""
+
+    df_copy = df_gen[:20].copy()
+    df_copy = df_copy[['listing_url', 'price']]
+
+    return df_copy
+
 
 dir_value = 'united-states, tx, austin'
 city_df, keys = load_listing(dir_value=dir_value, list_names=True)
@@ -119,7 +128,7 @@ room_type = city_df['room_type'].unique()
 bed_options = city_df['beds'].unique()
 city_df['color'] = 'red'
 city_df['size'] = 5
-df_gen=pd.DataFrame()
+df_gen = city_df[['listing_url', 'price']].copy()
 
 # warnings.filterwarnings("ignore")
 # sqlite3.connect('data.sqlite')
@@ -353,18 +362,25 @@ predictions = html.Div(
                         dcc.Textarea(
                             id='prediction-output',
                             value='Output',
-                            style={'width': '50%', 'height': 300},
+                            style={'width': '100%', 'height': 300},
+
                         ),
                     ])
-                ], style={'margin-top': '75px'})], width=10),
+                ], style={'margin-top': '75px'})], width=5),
             dbc.Col([
                 html.Div([
                     dash_table.DataTable(
                         id='table',
-                        columns=[{"name": i, "id": i} for i in df_gen.columns],
-                        data=df_gen.to_dict('records')
+                        columns=[{"name": i, "id": i} for i in df_gen],
+                        data=create_df_dict().to_dict('records'),
+                        style_cell={
+                            # all three widths are needed
+                            'minWidth': '180px', 'width': '180px', 'maxWidth': '180px',
+                            'overflow': 'hidden',
+                            'textOverflow': 'ellipsis'},
+                        style_table={'height': '400px', 'overflowY': 'auto', 'width': '500px'}
                     )
-                ])
+                ], style={'margin-top': '60px', 'margin-left': '70px'})
             ])
         ])
     ])
@@ -454,7 +470,7 @@ def update_output(n_clicks, input1, input2):
 @app.callback(
     Output('prediction-output', 'value'),
     Output('MaPlot', 'figure'),
-    #Output('table', 'df_gen'),
+    Output('table', 'data'),
     [Input('city_dd', 'value'),
      Input('num_bedrooms_dd', 'value'),
      Input('num_bathrooms_dd', 'value'),
@@ -489,7 +505,7 @@ def predict_price(city_dd, num_bedrooms_dd, num_bathrooms_dd, listing_dd, lat_dd
     four = kneigh.kneighbors(three, n_neighbors=20)
     y_pred = pipe.predict(df_predict)[0]
     near_neighbors = four[1]
-    value = f'${y_pred} is the optimal rental price for the property. The blue options below represent locations' \
+    value = f'${y_pred} is the predicted rental price for the property. The blue options below represent locations' \
             f'closest in features to your property described above.'
     filter_df = new.copy()
     filter_df['bedrooms'] = filter_df['bedrooms'].astype('float')
@@ -501,8 +517,8 @@ def predict_price(city_dd, num_bedrooms_dd, num_bathrooms_dd, listing_dd, lat_dd
         beta['size'] = 20
         final_df = pd.concat([filter_df, beta])
     figure = create_figure(final_df, city_dd)
-    df_gen = beta[['listing_url', 'price']].to_dict()
-    return value, figure, #df_gen
+    df_gen = beta[['listing_url', 'price']].to_dict('records')
+    return value, figure, df_gen
 
 
 if __name__ == "__main__":
